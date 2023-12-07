@@ -2,7 +2,7 @@
 
 class Day4
 {
-    public static void Main()
+    public static void Start()
     {
         string txtPath = @"input4.txt";
         string[] cards = File.ReadAllLines(txtPath);

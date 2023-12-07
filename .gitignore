@@ -4,3 +4,4 @@
 
 /2023/*.csproj
 /2023/*.sln
+.vscode/settings.json
