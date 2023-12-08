@@ -4,7 +4,7 @@ class Day7
         'A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J'
     };
 
-    public static void Main()
+    public static void Start()
     {
         string txtPath = @"input7.txt";
         string[] lines = File.ReadAllLines(txtPath);
