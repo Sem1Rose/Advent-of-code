@@ -1,6 +1,6 @@
 class Day8
 {
-    public static void Main()
+    public static void Start()
     {
         string txtPath = @"input8.txt";
         List<string> lines = File.ReadAllLines(txtPath).ToList();
