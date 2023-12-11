@@ -1,6 +1,6 @@
 class Day9
 {
-    public static void Main()
+    public static void Start()
     {
         string txtPath = @"input9.txt";
         int[][] lines = File.ReadAllLines(txtPath).Select(x => x.Split(" ").Select(x => int.Parse(x)).ToArray()).ToArray();
