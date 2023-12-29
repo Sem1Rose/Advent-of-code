@@ -1,12 +1,10 @@
-using System.ComponentModel;
-
 class Day11
 {
     static string txtPath = @"input11.txt";
     static string[] lines;
 
 
-    public static void Main()
+    public static void Start()
     {
         lines = File.ReadAllLines(txtPath);
 

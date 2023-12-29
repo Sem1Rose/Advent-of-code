@@ -1,0 +1,17 @@
+class DayXX
+{
+    static string txtPath = @"inputXX.txt";
+    
+    static void Main()
+    {
+        string[] lines = File.ReadAllLines(txtPath);
+
+        Console.WriteLine(PartOne());
+        Console.Read();
+    }
+
+    static int PartOne()
+    {
+        return 0;
+    }
+}
