@@ -5,7 +5,7 @@ class Day15
     static string txtPath = @"input15.txt";
     static string[] sequences;
 
-    static void Main()
+    static void Start()
     {
         sequences = File.ReadAllText(txtPath).Split(',', StringSplitOptions.RemoveEmptyEntries).ToArray();
 
