@@ -1,7 +1,8 @@
+.gitignore
 /2023/obj/
 /2023/bin/
-
-
 /2023/*.csproj
 /2023/*.sln
-.vscode/settings.json
+.vscode
+/2017/*
+!/2017/src
