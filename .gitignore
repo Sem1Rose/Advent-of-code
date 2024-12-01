@@ -4,3 +4,5 @@
 /2023/*.sln
 .vscode
 /2017/target
+/2024/target
+input
