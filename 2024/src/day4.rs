@@ -16,18 +16,10 @@ pub fn part_one() {
         let mut num_matches = 0;
         let re = Regex::new(r"XMAS").unwrap();
 
-        // println!();
         for i in vector {
-            // println!("{} {}", &i.concat(), re.captures_iter(&i.concat()).count());
             num_matches += re.captures_iter(&i.concat()).count();
         }
-        // println!();
         for i in vector {
-            //     println!(
-            //         "{} {}",
-            //         &reverse(i.clone()).concat(),
-            //         re.captures_iter(&reverse(i.clone()).concat()).count()
-            //     );
             num_matches += re.captures_iter(&reverse(i.clone()).concat()).count();
         }
 

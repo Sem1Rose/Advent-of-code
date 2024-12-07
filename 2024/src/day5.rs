@@ -78,14 +78,6 @@ pub fn part_two() {
 
     let mut mid_page_num_sum = 0;
     for update in updates {
-        // println!(
-        //     "\n{}",
-        //     update
-        //         .iter()
-        //         .map(|x| x.to_string())
-        //         .collect::<Vec<_>>()
-        //         .join(",")
-        // );
         if !test_ordering(&update, &incorrect_order_dictionary) {
             mid_page_num_sum +=
                 fix_ordering(&update, &incorrect_order_dictionary)[update.len() / 2];
@@ -103,17 +95,10 @@ fn fix_ordering(bad_update: &Vec<u32>, dictionary: &HashMap<u32, Vec<u32>>) -> V
             if !dictionary.contains_key(&fixed_update[i]) {
                 continue;
             }
-            // println!("\n{}", fixed_update[i]);
 
             let incorrect_ordering = dictionary.get(&fixed_update[i]).unwrap();
             for j in (i + 1)..fixed_update.len() {
-                // println!("  {}", fixed_update[j]);
                 if incorrect_ordering.contains(&fixed_update[j]) {
-                    // println!(
-                    //     "    Swapping {} with {}",
-                    //     fixed_update[i], fixed_update[j]
-                    // );
-                    // std::thread::sleep(std::time::Duration::from_secs_f32(0.2));
                     fixed_update.swap(i, j);
                     break 'outer;
                 }
