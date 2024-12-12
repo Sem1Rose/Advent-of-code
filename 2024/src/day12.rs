@@ -24,21 +24,6 @@ pub fn part_one() {
             .collect::<Vec<String>>(),
     );
 
-    // for j in garden.clone() {
-    //     for k in j {
-    //         print!("{}", k);
-    //     }
-    //     println!();
-    // }
-    // println!();
-
-    // let get_char = |map: Vec<Vec<String>>| -> String {
-    //     map.iter()
-    //         .flatten()
-    //         .find(|x| **x != ".")
-    //         .unwrap()
-    //         .to_owned()
-    // };
     let mut letters: Vec<Vec<Vec<String>>> = vec![];
     for character in b'A'..=b'Z' {
         let c = (character as char).to_string();
@@ -60,16 +45,6 @@ pub fn part_one() {
         letters.push(map);
     }
 
-    // for letter in letters.clone() {
-    //     for i in letter {
-    //         for j in i {
-    //             print!("{j}");
-    //         }
-    //         println!();
-    //     }
-    //     println!("\n");
-    // }
-
     let mut separated_letters = vec![];
     for map in letters {
         let mut c = b'A';
@@ -85,15 +60,6 @@ pub fn part_one() {
                 }
             }
         }
-
-        // println!("separated: ");
-        // for i in map_separated.clone() {
-        //     for j in i {
-        //         print!("{j}");
-        //     }
-        //     println!();
-        // }
-        // println!("\n");
 
         for character in b'A'..=b'z' {
             let c = (character as char).to_string();
@@ -115,16 +81,6 @@ pub fn part_one() {
             separated_letters.push(map);
         }
     }
-
-    // for letter in separated_letters.clone() {
-    //     for i in letter {
-    //         for j in i {
-    //             print!("{j}");
-    //         }
-    //         println!();
-    //     }
-    //     println!("\n");
-    // }
 
     let mut sum = 0;
     for letter_map in separated_letters {
@@ -156,7 +112,6 @@ pub fn part_one() {
                 }
             }
         }
-        // println!("{}: {}P {}A", get_char(letter_map), perimeter, area);
         sum += perimeter * area;
     }
     println!("{sum}");
@@ -212,22 +167,6 @@ pub fn part_two() {
             .collect::<Vec<String>>(),
     );
 
-    // for j in garden.clone() {
-    //     for k in j {
-    //         print!("{}", k);
-    //     }
-    //     println!();
-    // }
-    // println!();
-
-    // let get_char = |map: Vec<Vec<String>>| -> String {
-    //     map.iter()
-    //         .flatten()
-    //         .find(|x| **x != ".")
-    //         .unwrap()
-    //         .to_owned()
-    // };
-
     let mut letters: Vec<Vec<Vec<String>>> = vec![];
     for character in b'A'..=b'Z' {
         let c = (character as char).to_string();
@@ -249,16 +188,6 @@ pub fn part_two() {
         letters.push(map);
     }
 
-    // for letter in letters.clone() {
-    //     for i in letter {
-    //         for j in i {
-    //             print!("{j}");
-    //         }
-    //         println!();
-    //     }
-    //     println!("\n");
-    // }
-
     let mut separated_letters = vec![];
     for map in letters {
         let mut c = b'A';
@@ -274,15 +203,6 @@ pub fn part_two() {
                 }
             }
         }
-
-        // println!("separated: ");
-        // for i in map_separated.clone() {
-        //     for j in i {
-        //         print!("{j}");
-        //     }
-        //     println!();
-        // }
-        // println!("\n");
 
         for character in b'A'..=b'z' {
             let c = (character as char).to_string();
@@ -304,16 +224,6 @@ pub fn part_two() {
             separated_letters.push(map);
         }
     }
-
-    // for letter in separated_letters.clone() {
-    //     for i in letter {
-    //         for j in i {
-    //             print!("{j}");
-    //         }
-    //         println!();
-    //     }
-    //     println!("\n");
-    // }
 
     let mut sum = 0;
     for letter_map in separated_letters {
@@ -469,7 +379,6 @@ pub fn part_two() {
                 }
             }
         }
-        // println!("{}S {}A", no_sides, area);
         sum += no_sides * area;
     }
     println!("{sum}");
