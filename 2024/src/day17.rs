@@ -225,6 +225,62 @@ pub fn part_one() {
 
     println!("{}", out.join(","));
 }
+pub fn t(a: u64) -> String {
+    let input = read_to_string("./src/input").unwrap();
+
+    let mut lines = input.lines();
+    let b_register = lines
+        .next()
+        .unwrap()
+        .split(": ")
+        .nth(1)
+        .unwrap()
+        .parse::<u64>()
+        .unwrap();
+    let c_register = lines
+        .next()
+        .unwrap()
+        .split(": ")
+        .nth(1)
+        .unwrap()
+        .parse::<u64>()
+        .unwrap();
+    let program = lines
+        .next_back()
+        .unwrap()
+        .split(' ')
+        .nth(1)
+        .unwrap()
+        .split(',')
+        .map(|x| x.parse::<u64>().unwrap())
+        .collect::<Vec<_>>();
+
+    let get_op = |pointer: usize, instructions: Vec<u64>| -> String {
+        match instructions[pointer] {
+            0 => "adv",
+            1 => "bxl",
+            2 => "bst",
+            3 => "jnz",
+            4 => "bxc",
+            5 => "out",
+            6 => "bdv",
+            7 => "cdv",
+            _ => "",
+        }
+        .to_string()
+    };
+
+    let mut computer = Computer::new(a, b_register, c_register, program);
+    let mut out = vec![];
+    while computer.can_cycle() {
+        let output = computer.cycle();
+        if output.is_some() {
+            out.push(output.unwrap().to_string());
+        }
+    }
+
+    out.join(",")
+}
 
 pub fn part_two() {
     let input = read_to_string("./src/input").unwrap();
@@ -240,35 +296,127 @@ pub fn part_two() {
         .map(|x| x.parse::<u64>().unwrap())
         .collect::<Vec<_>>();
 
-    // println!(
-    //     "{}\t{}\t{}\n{}",
-    //     a_register,
-    //     b_register,
-    //     c_register,
-    //     0,
-    // program
-    //     .iter()
-    //     .map(|x| x.to_string())
-    //     .collect::<Vec<_>>()
-    //     .join(",")
-    // );
+    let mut final_a = u64::MAX;
+    for possible_a in reverse_engineer(0, program.iter().rev().copied().collect()) {
+        println!("Possible a: {}", possible_a);
+        if possible_a < final_a {
+            final_a = possible_a;
+        }
+    }
 
-    // let get_op = |pointer: usize, instructions: Vec<u32>| -> String {
-    //     match instructions[pointer] {
-    //         0 => "adv",
-    //         1 => "bxl",
-    //         2 => "bst",
-    //         3 => "jnz",
-    //         4 => "bxc",
-    //         5 => "out",
-    //         6 => "bdv",
-    //         7 => "cdv",
-    //         _ => "",
-    //     }
-    //     .to_string()
-    // };
+    println!("final a: {:#03b},\t{0}", final_a);
+}
 
-    let num_threads = 8;
+fn reverse_engineer(input_a: u64, program: Vec<u64>) -> Vec<u64> {
+    let mut program_iter = program.iter();
+
+    let mut possible_nums = vec![];
+    let mut a = input_a;
+    while let Some(expected) = program_iter.next() {
+        let new_a_s = rev_out(a, *expected);
+        if new_a_s.len() == 1 {
+            let new_a = *new_a_s.first().unwrap();
+            a = new_a;
+        } else {
+            for new_a in new_a_s {
+                possible_nums.extend(reverse_engineer(
+                    new_a,
+                    program_iter.clone().copied().collect(),
+                ));
+            }
+
+            return possible_nums;
+        }
+    }
+    possible_nums.push(a);
+
+    possible_nums
+}
+
+fn rev_out(a: u64, expected: u64) -> Vec<u64> {
+    println!("A:\t{:#03b}", a);
+    let xor5 = expected ^ 5;
+    println!("\t^5:\t{:#03b}", xor5);
+
+    let mut possible_a = vec![];
+    for b in 0..8 {
+        let xor3 = b ^ 3;
+        let c = xor3 ^ xor5;
+        // if xor3 >= 3 {
+        print!(
+            "\tb:\t{:#03b},\t^3:\t{:#03b},\tc:\t{:#03b}:\t{:#03b}\t\t",
+            b,
+            xor3,
+            c,
+            (c << xor3) | b
+        );
+        if xor3 < 3 {
+            // let test = ((c & ((b >> xor3) & u64::MAX)) << xor3) | b;
+            let mut same_common_bits = true;
+            // for i in (0..3).map(|x| 2u64.pow(x)).take(3-xor3) {
+            for i in 0..(3 - xor3 as u32) {
+                if (c & 2u64.pow(i) == 0) != (b & 2u64.pow(xor3 as u32 + i) == 0) {
+                    // if (c & 2u64.pow(i)) != (b & 2u64.pow(xor3 as u32 + i)) {
+                    same_common_bits = false;
+                    break;
+                }
+            }
+            if same_common_bits {
+                possible_a.push((c << xor3) | b);
+                print!("possible");
+            }
+        } else {
+            possible_a.push((c << xor3) | b);
+            print!("possible");
+        }
+        println!();
+    }
+
+    println!();
+    let mut output = vec![];
+    // let mut new_a = u64::MAX;
+    for i in possible_a {
+        // if i < 8 {
+        if ((a << 3) | i) >> 3 == a {
+            let o = t((a << 3) | i);
+            print!(
+                "\t{:#03b},\t\tnew a:\t{:#03b} {1}\tout:\t{}\texpected:\t{}",
+                i,
+                (a << 3) | i,
+                &o[0..1],
+                expected
+            );
+            if expected.to_string() != o[0..1] {
+                println!("  FAILED!");
+                continue;
+            }
+            println!("  OK!");
+            // if (a << 3) | i < new_a {
+            output.push((a << 3) | i);
+            // new_a = (a << 3) | i;
+            // print!("  used!");
+            // }
+            // println!();
+        }
+    }
+    output
+}
+
+pub fn part_two_brute_force() {
+    let input = read_to_string("./src/input").unwrap();
+
+    let mut lines = input.lines();
+    let program = lines
+        .next_back()
+        .unwrap()
+        .split(' ')
+        .nth(1)
+        .unwrap()
+        .split(',')
+        .map(|x| x.parse::<u64>().unwrap())
+        .collect::<Vec<_>>();
+
+    let num_threads = 32;
     let mut handles = vec![];
     for j in 0..num_threads {
         let cloned = program.clone();
