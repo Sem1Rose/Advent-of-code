@@ -1,4 +1,9 @@
-use std::{collections::HashMap, collections::HashSet, fs::read_to_string};
+use std::{
+    collections::{HashMap, HashSet},
+    fs::read_to_string,
+    sync::{Arc, Mutex},
+    thread,
+};
 
 pub fn part_one() {
     let input = read_to_string("./src/input").unwrap();
@@ -201,7 +206,8 @@ fn iterate_maze(
         }
         // std::thread::sleep(std::time::Duration::from_millis(500));
     }
-}*/
+}
+*/
 
 pub fn part_two() {
     let input = read_to_string("./src/input").unwrap();
@@ -231,66 +237,145 @@ pub fn part_two() {
     //     println!("{cost}");
     // }
     // println!("{}", paths_costs.iter().min().unwrap());
-    let mut best_paths_tiles = HashSet::new();
-    let best_path_costs = dijkstra2(
-        &maze_debug,
-        &nodes,
-        (1, 1),
-        (maze[0].len() - 2, maze.len() - 2),
-        true,
-    );
-    let best_cost = best_path_costs[0].1;
-    println!("{best_cost}");
-    best_paths_tiles.extend(best_path_costs.iter().map(|x| x.0));
+    // let num_lines = 3;
 
-    let distance = |p: (usize, usize), d: (usize, usize)| -> (usize, usize) {
+    let start = (1, 1);
+    let destination = (maze[0].len() - 2, maze.len() - 2);
+    let best_paths_tiles = Arc::new(Mutex::new(HashSet::new()));
+    let best_path_costs = dijkstra2(&maze_debug, &nodes, start, destination, true);
+    let best_cost = best_path_costs[0].1;
+    best_paths_tiles
+        .lock()
+        .unwrap()
+        .extend(best_path_costs.iter().map(|x| x.0));
+
+    // println!("Best cost: {best_cost}");
+    // for i in (0..maze_debug.len()).rev() {
+    //     for j in 0..maze_debug[i].len() {
+    //         if (j, i) == start {
+    //             print!("S");
+    //         } else if best_path_costs.iter().any(|x| x.0 == (j, i)) {
+    //             print!("O");
+    //         } else {
+    //             print!("{}", maze_debug[i][j]);
+    //         }
+    //     }
+    //     println!();
+    // }
+    // print!("{}", "\n".repeat(num_lines));
+
+    let unsigned_distance = |p: (usize, usize), d: (usize, usize)| -> (usize, usize) {
         (
-            (p.0 as i32 - d.0 as i32).unsigned_abs() as usize,
-            (p.1 as i32 - d.1 as i32).unsigned_abs() as usize,
+            (p.0 as isize - d.0 as isize).unsigned_abs(),
+            (p.1 as isize - d.1 as isize).unsigned_abs(),
         )
     };
-    for i in 0..(best_path_costs.len() - 1) {
-        let p = best_path_costs[i].0;
+    let signed_distance = |p: (usize, usize), d: (usize, usize)| -> (isize, isize) {
+        (p.0 as isize - d.0 as isize, p.1 as isize - d.1 as isize)
+    };
 
-        let mut neighbors = vec![];
-        for offset in [(0, 1), (1, 0), (-1, 0), (0, -1)] {
-            let new_pos = (
-                (p.0 as i32 + offset.0) as usize,
-                (p.1 as i32 + offset.1) as usize,
-            );
-            if !best_paths_tiles.contains(&new_pos) && nodes.contains(&new_pos) {
-                neighbors.push(new_pos);
-            }
-        }
+    println!("Starting...");
 
-        for n in neighbors {
-            let mut n_cost = 0;
-            n_cost += 1;
-            if i > 0 {
-                if (distance(p, best_path_costs[i - 1].0).0 == 0) != (distance(p, n).0 == 0) {
-                    n_cost += 1000;
+    let num_threads = 8;
+    let mut handles = vec![];
+    for j in 0..num_threads {
+        let cloned_best_path = best_path_costs.clone();
+        let cloned_nodes = nodes.clone();
+        let cloned_maze_debug = maze_debug.clone();
+        let cloned_best_paths_tiles = Arc::clone(&best_paths_tiles);
+        let min = 1;
+        let max = best_path_costs.len() - 1;
+        let diff = max - min;
+        let part = diff / num_threads;
+
+        let handle = thread::spawn(move || {
+            let mut new_best_tiles = vec![];
+            for i in (min + part * j)..(min + part * (j + 1)) {
+                // for i in (1..best_path_costs.iter().take(best_path_costs.len() - 1).len()) {
+                let current_node = cloned_best_path[i].0;
+
+                let mut neighbors = vec![];
+                let prev_node_offset = signed_distance(cloned_best_path[i + 1].0, current_node);
+
+                for offset in [(1, 0), (0, 1), (-1, 0), (0, -1)] {
+                    if offset == prev_node_offset {
+                        continue;
+                    }
+
+                    let new_pos = (
+                        (current_node.0 as isize + offset.0) as usize,
+                        (current_node.1 as isize + offset.1) as usize,
+                    );
+                    if cloned_nodes.contains(&new_pos) && new_pos != destination {
+                        // if !best_paths_tiles.contains(&new_pos) && cloned_nodes.contains(&new_pos) {
+                        neighbors.push(new_pos);
+                    }
                 }
-            } else if distance(p, n).1 != 0 {
-                n_cost += 1000;
-            }
-            let new_path = dijkstra2(
-                &maze_debug,
-                &nodes,
-                n,
-                (maze[0].len() - 2, maze.len() - 2),
-                false,
-            );
-            let new_cost = new_path[0].1 + n_cost + best_path_costs[i].1;
 
-            println!(
-                "{}, {}, {}, {}",
-                new_path[0].1, n_cost, best_path_costs[i].1, new_cost
-            );
-            if new_cost == best_cost {
-                best_paths_tiles.extend(new_path.iter().map(|x| x.0));
+                if neighbors.len() > 1 {
+                    for neighbor in neighbors {
+                        let mut nodes_modified = cloned_nodes.clone();
+                        nodes_modified
+                            .remove(nodes_modified.iter().position(|x| *x == neighbor).unwrap());
+                        let mut maze_debug_modified = cloned_maze_debug.clone();
+                        maze_debug_modified[neighbor.1][neighbor.0] = "#".to_string();
+
+                        let mut n_cost = 0;
+
+                        let new_path = dijkstra2(
+                            &maze_debug_modified,
+                            &nodes_modified,
+                            current_node,
+                            destination,
+                            false,
+                        );
+
+                        if new_path[0].1 == u32::MAX {
+                            continue;
+                        }
+
+                        if (unsigned_distance(current_node, cloned_best_path[i + 1].0).0 == 0)
+                            != (unsigned_distance(current_node, new_path[new_path.len() - 2].0).0
+                                == 0)
+                        {
+                            n_cost = 1000;
+                        }
+                        let new_cost = new_path[0].1 + n_cost + cloned_best_path[i].1;
+
+                        // println!("{}, {}, {}", new_path[0].1, cloned[i].1, new_cost);
+                        // for i in (0..maze_debug_modified.len()).rev() {
+                        //     for j in 0..maze_debug_modified[i].len() {
+                        //         if (j, i) == current_node {
+                        //             print!("S");
+                        //         } else if new_path.iter().any(|x| x.0 == (j, i)) {
+                        //             print!("O");
+                        //         } else {
+                        //             print!("{}", maze_debug_modified[i][j]);
+                        //         }
+                        //     }
+                        //     println!();
+                        // }
+                        // print!("{}", "\n".repeat(num_lines));
+
+                        if new_cost == best_cost {
+                            new_best_tiles.extend(new_path.iter().map(|x| x.0));
+                        }
+                    }
+                }
+                println!("{}/{}", i, cloned_best_path.len());
             }
-        }
+            cloned_best_paths_tiles
+                .lock()
+                .unwrap()
+                .extend(new_best_tiles);
+        });
+        handles.push(handle);
     }
+
+    for handle in handles {
+        handle.join();
+    }
+    // );
     // let lowest_cost = dijkstra2(
     //     &maze_debug,
     //     &nodes,
@@ -314,7 +399,17 @@ pub fn part_two() {
     //         best_paths_tiles.extend(new_best_tiles);
     //     }
     // }
-    println!("{}", best_paths_tiles.len());
+    println!("{}", best_paths_tiles.lock().unwrap().len());
+    // for i in (0..maze_debug.len()).rev() {
+    //     for j in 0..maze_debug[i].len() {
+    //         if best_paths_tiles.contains(&(j, i)) {
+    //             print!("O");
+    //         } else {
+    //             print!("{}", maze_debug[i][j]);
+    //         }
+    //     }
+    //     println!();
+    // }
 }
 
 fn dijkstra2(
@@ -341,7 +436,7 @@ fn dijkstra2(
             let mut min_dist_node = usize::MAX;
 
             for i in 0..q.len() {
-                if dist[&q[i]] < min_dist {
+                if dist[&q[i]] <= min_dist {
                     min_dist = dist[&q[i]];
                     min_dist_node = i;
                 }
@@ -359,16 +454,17 @@ fn dijkstra2(
         )
     };
 
-    for i in maze {
-        for j in i {
-            print!("{j}");
-        }
-        println!();
-    }
-    println!("\n\n\n\n\n");
+    // let lines = 3;
+    // for i in maze {
+    //     for j in i {
+    //         print!("{j}");
+    //     }
+    //     println!();
+    // }
+    // println!("{}", "\n".repeat(lines));
     while !Q.is_empty() {
         // let mut min_dist_node_indices = get_min_dist_node_index(&Q, &dists).into_iter();
-        let mut min_dist_node_index = get_min_dist_node_index(&Q, &dists);
+        let min_dist_node_index = get_min_dist_node_index(&Q, &dists);
         // while visited.contains(&Q[min_dist_node_index]) {
         //     let next = min_dist_node_indices.next();
         //     if next.is_none() {
@@ -376,20 +472,29 @@ fn dijkstra2(
         //     }
         //     min_dist_node_index = next.unwrap();
         // }
+        if min_dist_node_index == usize::MAX {
+            continue;
+        }
         let node = Q[min_dist_node_index];
         Q.remove(min_dist_node_index);
+        if dists[&node] == u32::MAX {
+            continue;
+        }
+        if node == destination {
+            break;
+        }
 
         let mut maze_clone = maze.to_vec().clone();
         for i in Q.clone() {
             maze_clone[i.1][i.0] = "+".to_string();
         }
-        for i in maze_clone {
-            for j in i {
-                print!("{j}");
-            }
-            println!();
-        }
-        println!("\n\n\n\n\n");
+        // for i in maze_clone {
+        //     for j in i {
+        //         print!("{j}");
+        //     }
+        //     println!();
+        // }
+        // println!("{}", "\n".repeat(lines));
 
         let mut neighbors = vec![];
         for offset in [(0, 1), (1, 0), (-1, 0), (0, -1)] {
@@ -459,5 +564,5 @@ fn dijkstra2(
         x.push(dists[&i]);
     }
 
-    path.iter().map(|x| *x).zip(x).collect::<Vec<_>>()
+    path.iter().copied().zip(x).collect::<Vec<_>>()
 }

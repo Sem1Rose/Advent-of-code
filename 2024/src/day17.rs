@@ -334,22 +334,22 @@ fn reverse_engineer(input_a: u64, program: Vec<u64>) -> Vec<u64> {
 }
 
 fn rev_out(a: u64, expected: u64) -> Vec<u64> {
-    println!("A:\t{:#03b}", a);
+    // println!("A:\t{:#03b}", a);
     let xor5 = expected ^ 5;
-    println!("\t^5:\t{:#03b}", xor5);
+    // println!("\t^5:\t{:#03b}", xor5);
 
     let mut possible_a = vec![];
     for b in 0..8 {
         let xor3 = b ^ 3;
         let c = xor3 ^ xor5;
         // if xor3 >= 3 {
-        print!(
-            "\tb:\t{:#03b},\t^3:\t{:#03b},\tc:\t{:#03b}:\t{:#03b}\t\t",
-            b,
-            xor3,
-            c,
-            (c << xor3) | b
-        );
+        // print!(
+        //     "\tb:\t{:#03b},\t^3:\t{:#03b},\tc:\t{:#03b}:\t{:#03b}\t\t",
+        //     b,
+        //     xor3,
+        //     c,
+        //     (c << xor3) | b
+        // );
         if xor3 < 3 {
             // let test = ((c & ((b >> xor3) & u64::MAX)) << xor3) | b;
             let mut same_common_bits = true;
@@ -363,34 +363,34 @@ fn rev_out(a: u64, expected: u64) -> Vec<u64> {
             }
             if same_common_bits {
                 possible_a.push((c << xor3) | b);
-                print!("possible");
+                // print!("possible");
             }
         } else {
             possible_a.push((c << xor3) | b);
-            print!("possible");
+            // print!("possible");
         }
-        println!();
+        // println!();
     }
 
-    println!();
+    // println!();
     let mut output = vec![];
     // let mut new_a = u64::MAX;
     for i in possible_a {
         // if i < 8 {
         if ((a << 3) | i) >> 3 == a {
             let o = t((a << 3) | i);
-            print!(
-                "\t{:#03b},\t\tnew a:\t{:#03b} {1}\tout:\t{}\texpected:\t{}",
-                i,
-                (a << 3) | i,
-                &o[0..1],
-                expected
-            );
+            // print!(
+            //     "\t{:#03b},\t\tnew a:\t{:#03b} {1}\tout:\t{}\texpected:\t{}",
+            //     i,
+            //     (a << 3) | i,
+            //     &o[0..1],
+            //     expected
+            // );
             if expected.to_string() != o[0..1] {
-                println!("  FAILED!");
+                // println!("  FAILED!");
                 continue;
             }
-            println!("  OK!");
+            // println!("  OK!");
             // if (a << 3) | i < new_a {
             output.push((a << 3) | i);
             // new_a = (a << 3) | i;
