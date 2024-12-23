@@ -72,13 +72,16 @@ pub fn part_one() {
 
         let mut third_sequences = vec![];
         for seq in second_sequences {
-            let sequence = get_permutations(get_bot_movements(&seq, &robots_keypad, bot_pos));
-
-            for i in sequence {
-                if test_sequence(&i, &robots_keypad, bot_pos) {
-                    third_sequences.push(i);
-                }
+            let sequence = get_bot_movements(&seq, &robots_keypad, bot_pos);
+            if test_sequence(&sequence, &robots_keypad, bot_pos) {
+                third_sequences.push(sequence);
             }
+
+            // for i in sequence {
+            //     if test_sequence(&i, &robots_keypad, bot_pos) {
+            //         third_sequences.push(i);
+            //     }
+            // }
         }
 
         println!("third sequences: {}", third_sequences.len());
