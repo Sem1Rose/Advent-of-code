@@ -15,6 +15,7 @@ mod day21;
 mod day22;
 mod day23;
 mod day24;
+mod day25;
 mod day3;
 mod day4;
 mod day5;
@@ -24,7 +25,5 @@ mod day8;
 mod day9;
 
 fn main() {
-    day24::part_one();
+    day25::part_one();
 }
-
-// 288671462
