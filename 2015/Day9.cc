@@ -20,7 +20,7 @@ unsigned int get_weight(int id1, int id2, map<unsigned int, map<unsigned int, un
 
 int dijkstra_get_lowest_cost(vector<string> &nodes, map<unsigned int, map<unsigned int, unsigned int>> &weights)
 {
-    auto customComp = [](tuple<unsigned int, tuple<unsigned int, unsigned int>> l, tuple<unsigned int, tuple<unsigned int, unsigned int>> r)
+    auto customComp = [](tuple<int, tuple<int, unsigned int>> l, tuple<int, tuple<int, unsigned int>> r)
     { return get<0>(l) > get<0>(r); };
 
     //          node            mask            cost
@@ -45,6 +45,8 @@ int dijkstra_get_lowest_cost(vector<string> &nodes, map<unsigned int, map<unsign
 
         for (int j = 0; j < nodes.size(); j++)
         {
+            if ((unsigned int)pow(2, j) & get<1>(item)) continue;
+
             int weight = get_weight(get<0>(item), j, weights);
             if (weight >= INT_MAX)
                 continue;
@@ -53,8 +55,7 @@ int dijkstra_get_lowest_cost(vector<string> &nodes, map<unsigned int, map<unsign
             auto child = make_tuple(j, mask);
 
             int current_cost = INT_MAX;
-            if (costs.find(j) != end(costs))
-                if (costs[j].find(mask) != end(costs[j]))
+            if (costs.find(j) != end(costs) && costs[j].find(mask) != end(costs[j]))
                     current_cost = costs[j][mask];
 
             if (current_cost > costs[get<0>(item)][get<1>(item)] + weight)
@@ -164,24 +165,22 @@ int part_1(ifstream &input)
 
 int dijkstra_get_highest_cost(vector<string> &nodes, map<unsigned int, map<unsigned int, unsigned int>> &weights)
 {
-    auto customComp = [](tuple<int, tuple<vector<int>, unsigned int>> l, tuple<int, tuple<vector<int>, unsigned int>> r)
+    auto customComp = [](tuple<int, tuple<int, unsigned int>> l, tuple<int, tuple<int, unsigned int>> r)
     { return get<0>(l) > get<0>(r); };
 
     //  node           mask     cost
     map<int, map<unsigned int, int>> costs;
-    //                    order     node history      mask
-    priority_queue<tuple<int, tuple<vector<int>, unsigned int>>, vector<tuple<int, tuple<vector<int>, unsigned int>>>, decltype(customComp)> priority_queue(customComp);
+    //                    order       node     mask
+    priority_queue<tuple<int, tuple<int, unsigned int>>, vector<tuple<int, tuple<int, unsigned int>>>, decltype(customComp)> priority_queue(customComp);
 
     for (int i = 0; i < nodes.size(); i++)
     {
-        vector<int> n = {i};
-        auto key = make_tuple(n, pow(2, i));
+        auto key = make_tuple(i, pow(2, i));
 
-        costs[i][pow(2, i)] = INT_MAX;
-        priority_queue.push(make_tuple(INT_MAX, key));
+        costs[i][pow(2, i)] = 0;
+        priority_queue.push(make_tuple(0, key));
     }
 
-    int i = 0;
     for (; !priority_queue.empty();)
     {
         auto cost = get<0>(priority_queue.top());
@@ -189,31 +188,29 @@ int dijkstra_get_highest_cost(vector<string> &nodes, map<unsigned int, map<unsig
         auto item = get<1>(priority_queue.top());
         priority_queue.pop();
 
-        auto node_history = get<0>(item);
-
-        cout << node_history[node_history.size() - 1] << " " << nodes[node_history[node_history.size() - 1]] << " " << cost << endl;
+        cout << get<0>(item) << " " << nodes[get<0>(item)] << " " << cost << endl;
 
         for (int j = 0; j < nodes.size(); j++)
         {
-            int weight = get_weight(node_history[node_history.size() - 1], j, weights);
+            if ((unsigned int)pow(2, j) & get<1>(item)) continue;
+
+            int weight = get_weight(get<0>(item), j, weights);
             if (weight >= INT_MAX)
                 continue;
 
             unsigned int mask = get<1>(item) | (unsigned int)pow(2, j);
-            vector<int> c = {j};
-            auto child = make_tuple(c, mask);
+            auto child = make_tuple(j, mask);
 
-            int child_cost = INT_MAX;
-            if (costs.find(j) != end(costs))
-                if (costs[j].find(mask) != end(costs[j]))
+            int child_cost = -1;
+            if (costs.find(j) != end(costs) && costs[j].find(mask) != end(costs[j]))
                     child_cost = costs[j][mask];
 
-            cout << "\t" << j << " " << nodes[j] << " " << weight << " " << child_cost << " " << costs[node_history[node_history.size() - 1]][get<1>(item)] - weight << endl;
+            cout << "\t" << j << " " << nodes[j] << " " << weight << " " << child_cost << " " << costs[get<0>(item)][get<1>(item)] + weight << endl;
 
-            if (child_cost > costs[node_history[node_history.size() - 1]][get<1>(item)] - weight)
+            if (child_cost < costs[get<0>(item)][get<1>(item)] + weight)
             {
-                costs[j][mask] = costs[node_history[node_history.size() - 1]][get<1>(item)] - weight;
-                priority_queue.push(make_tuple(costs[node_history[node_history.size() - 1]][get<1>(item)] - weight, child));
+                costs[j][mask] = costs[get<0>(item)][get<1>(item)] + weight;
+                priority_queue.push(make_tuple(costs[get<0>(item)][get<1>(item)] + weight, child));
             }
         }
     }
@@ -228,15 +225,15 @@ int dijkstra_get_highest_cost(vector<string> &nodes, map<unsigned int, map<unsig
     // }
 
     unsigned int mask = (unsigned int)pow(2, nodes.size()) - 1;
-    unsigned int answer = INT_MAX;
+    int answer = -1;
     for (int i = 0; i < nodes.size(); i++)
     {
-        unsigned int cost = INT_MAX;
+        int cost = -1;
         if (costs.find(i) != end(costs))
             if (costs[i].find(mask) != end(costs[i]))
                 cost = costs[i][mask];
 
-        answer = min(answer, INT_MAX - cost);
+        answer = max(answer, cost);
     }
 
     return answer;
