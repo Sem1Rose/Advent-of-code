@@ -1,12 +1,15 @@
-#include <iostream>
+#include <bits/stdc++.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <unordered_set>
 #include <vector>
-#include <fstream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <bits/stdc++.h>
+
+#include "./libs/ThreadPool.h"
 
 using namespace std;
 
@@ -17,16 +20,15 @@ int part_1(ifstream &input)
     unordered_set<string> molecules;
 
     string line;
-    while (getline(input, line))
-    {
-        if (line.empty())
-        {
+    while (getline(input, line)) {
+        if (line.empty()) {
             getline(input, molecule);
 
             break;
         }
 
-        char *key = (char *)malloc(sizeof(char) * 3), *replace = (char *)malloc(sizeof(char) * 12);
+        char *key     = (char *)malloc(sizeof(char) * 3),
+             *replace = (char *)malloc(sizeof(char) * 12);
 
         sscanf(line.c_str(), "%s => %s", key, replace);
 
@@ -46,14 +48,11 @@ int part_1(ifstream &input)
     // }
 
     int i = 0;
-    while (i < molecule.size())
-    {
+    while (i < molecule.size()) {
         string key{molecule[i]};
 
-        if (replaces.find(key) != replaces.end())
-        {
-            for (auto &&replace : replaces[key])
-            {
+        if (replaces.find(key) != replaces.end()) {
+            for (auto &&replace : replaces[key]) {
                 string new_molecule = molecule;
                 new_molecule.erase(new_molecule.begin() + i);
                 int j = 0;
@@ -64,13 +63,10 @@ int part_1(ifstream &input)
             }
         }
 
-        if (i < molecule.size() - 1)
-        {
+        if (i < molecule.size() - 1) {
             key.push_back(molecule[i + 1]);
-            if (replaces.find(key) != replaces.end())
-            {
-                for (auto &&replace : replaces[key])
-                {
+            if (replaces.find(key) != replaces.end()) {
+                for (auto &&replace : replaces[key]) {
                     string new_molecule = molecule;
                     new_molecule.erase(new_molecule.begin() + i);
                     new_molecule.erase(new_molecule.begin() + i);
@@ -93,39 +89,73 @@ int part_1(ifstream &input)
 
 // this is going to be a massacre
 // rip my dear 12400 you will be missed
-vector<int> iterate(int step, string mol, map<string, vector<string>> *replaces)
+vector<int> iterate(ThreadPool *pool, int threading_level, int step, string mol,
+                    map<string, vector<string>> *replaces)
 {
     if (mol == "e")
         return {step};
 
     vector<int> steps;
 
-    for (auto &&k : *replaces)
-    {
-        int start = 0;
-        // cout << k.first << endl;
-        auto result = mol.find(k.first, start);
-        while (result != string::npos)
-        {
-            string new_mol = mol;
-            for (int i = 0; i < k.first.size(); i++)
-                new_mol.erase(new_mol.begin() + result);
+    if (threading_level > 0) {
+        vector<future<vector<int>>> results;
+        for (auto &&k : *replaces) {
+            results.emplace_back(pool->enqueue([&]() {
+                vector<int> s;
+                int start   = 0;
+                auto result = mol.find(k.first, start);
+                while (result != string::npos) {
+                    string new_mol = mol;
+                    for (int i = 0; i < k.first.size(); i++)
+                        new_mol.erase(new_mol.begin() + result);
 
-            // cout << "    " << new_mol << endl;
+                    for (auto &&v : k.second) {
+                        string newer_mol = new_mol;
+                        int j            = 0;
+                        for (auto &&c : v)
+                            newer_mol.insert(newer_mol.begin() + result + j++,
+                                             c);
 
-            for (auto &&v : k.second)
-            {
-                string newer_mol = new_mol;
-                int j = 0;
-                for (auto &&c : v)
-                    newer_mol.insert(newer_mol.begin() + result + j++, c);
+                        for (auto &&r : iterate(pool, threading_level - 1,
+                                                step + 1, newer_mol, replaces))
+                            // steps.push_back(r);
+                            s.push_back(r);
+                    }
 
-                // cout << "    " << v << "\t" << newer_mol << endl;
-                for (auto &&r : iterate(step + 1, newer_mol, replaces))
-                    steps.push_back(r);
+                    start  = result + 1;
+                    result = mol.find(k.first, start);
+                }
+
+                return s;
+            }));
+        }
+
+        for (auto &&result : results)
+            for (auto &&i : result.get())
+                steps.push_back(i);
+    } else {
+        for (auto &&k : *replaces) {
+            int start   = 0;
+            auto result = mol.find(k.first, start);
+            while (result != string::npos) {
+                string new_mol = mol;
+                for (int i = 0; i < k.first.size(); i++)
+                    new_mol.erase(new_mol.begin() + result);
+
+                for (auto &&v : k.second) {
+                    string newer_mol = new_mol;
+                    int j            = 0;
+                    for (auto &&c : v)
+                        newer_mol.insert(newer_mol.begin() + result + j++, c);
+
+                    for (auto &&r : iterate(pool, threading_level - 1, step + 1,
+                                            newer_mol, replaces))
+                        steps.push_back(r);
+                }
+
+                start  = result + 1;
+                result = mol.find(k.first, start);
             }
-            start = result + 1;
-            result = mol.find(k.first, start);
         }
     }
 
@@ -139,16 +169,15 @@ int part_2(ifstream &input)
     unordered_set<string> molecules;
 
     string line;
-    while (getline(input, line))
-    {
-        if (line.empty())
-        {
+    while (getline(input, line)) {
+        if (line.empty()) {
             getline(input, molecule);
 
             break;
         }
 
-        char *key = (char *)malloc(sizeof(char) * 3), *replace = (char *)malloc(sizeof(char) * 12);
+        char *key     = (char *)malloc(sizeof(char) * 3),
+             *replace = (char *)malloc(sizeof(char) * 12);
 
         sscanf(line.c_str(), "%s => %s", key, replace);
 
@@ -167,20 +196,36 @@ int part_2(ifstream &input)
     //     cout << "]" << endl;
     // }
 
+    ThreadPool pool(24);
+
     int min = INT_MAX;
-    for (auto &&i : iterate(0, molecule, &replaces))
+    for (auto &&i : iterate(&pool, 2, 0, molecule, &replaces))
         if (i < min)
             min = i;
 
     cout << min << endl;
+
+    // std::vector<std::future<int>> results;
+
+    // for (int i = 0; i < 8; ++i) {
+    //     results.emplace_back(pool.enqueue([i] {
+    //         while (true)
+    //             ;
+    //         return0
+    //     }));
+    // }
+
+    // for (auto &&result : results)
+    //     std::cout << result.get() << ' ';
+    // std::cout << std::endl;
+
     return 0;
 }
 
 int main()
 {
     ifstream input("input.txt");
-    if (!input.is_open())
-    {
+    if (!input.is_open()) {
         cerr << "Error opening file" << endl;
         return 1;
     }
