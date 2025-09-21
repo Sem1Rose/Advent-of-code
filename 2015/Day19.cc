@@ -199,7 +199,7 @@ int part_2(ifstream &input)
     ThreadPool pool(24);
 
     int min = INT_MAX;
-    for (auto &&i : iterate(&pool, 2, 0, molecule, &replaces))
+    for (auto &&i : iterate(&pool, 1, 0, molecule, &replaces))
         if (i < min)
             min = i;
 
