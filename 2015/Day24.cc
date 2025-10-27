@@ -66,6 +66,12 @@ int part_1(ifstream &input)
         return product;
     };
 
+    /* man fuck this shit i spent the last 4 hours trying to find a bug that
+     * turned out to be an overflowing bug out of all the untraceable bugs in
+     * the fucking world i'm so done with this shit dude where's rust's very
+     * intuitive and verbose u64's and u32's instead of the `unsigned long long`
+     * yea sure buddy and cpp devs hate on java for `public static void
+     * main string args` fucking unbelievable man i'm out */
     unsigned long long lowest_qe = LONG_LONG_MAX;
     int lowest_size              = INT_MAX;
     bool b                       = false;
