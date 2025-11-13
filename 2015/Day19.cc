@@ -164,9 +164,9 @@ vector<int> iterate(ThreadPool *pool, int threading_level, int step, string mol,
 
 int part_2(ifstream &input)
 {
-    map<string, vector<string>> replaces;
+    // map<string, vector<string>> replaces;
     string molecule;
-    unordered_set<string> molecules;
+    // unordered_set<string> molecules;
 
     string line;
     while (getline(input, line)) {
@@ -176,48 +176,78 @@ int part_2(ifstream &input)
             break;
         }
 
-        char *key     = (char *)malloc(sizeof(char) * 3),
-             *replace = (char *)malloc(sizeof(char) * 12);
+        // char *key     = (char *)malloc(sizeof(char) * 3),
+        //      *replace = (char *)malloc(sizeof(char) * 12);
 
-        sscanf(line.c_str(), "%s => %s", key, replace);
+        // sscanf(line.c_str(), "%s => %s", key, replace);
 
-        if (replaces.find(replace) == replaces.end())
-            replaces.insert({replace, {key}});
-        else
-            replaces[replace].push_back(key);
+        // if (replaces.find(replace) == replaces.end())
+        //     replaces.insert({replace, {key}});
+        // else
+        //     replaces[replace].push_back(key);
     }
 
-    // cout << molecule << endl;
-    // for (auto it = replaces.cbegin(); it != replaces.cend(); ++it)
-    // {
-    //     cout << it->first << " = " << it->first.size() << " [";
-    //     for (auto &&i : it->second)
-    //         cout << i << ", ";
-    //     cout << "]" << endl;
-    // }
+    // btw i'm so mad the solution was this simple. this problem sucks ass
+    // and fuck chatgpt for giving me the solution
 
-    ThreadPool pool(24);
+    // int steps = 0, N = 0, Rn = 0, Ar = 0, Y = 0;
+    int steps = 0;
+    for (int i = 0; i < molecule.size(); i++) {
+        // N++;
+        if (i < molecule.size() - 1 && molecule[i + 1] >= 'a') {
+            if (molecule[i] == 'R' && molecule[i + 1] == 'n') {
+                // Rn++;
+                // steps--; // ignored since we're not adding to steps anyway
+            } else if (molecule[i] == 'A' && molecule[i + 1] == 'r') {
+                // Ar++;
+                // steps--;
+            } else
+                steps++;
+            i++;
+        } else {
+            if (molecule[i] == 'Y') {
+                // Y++;
+                // steps -= 2;
+                steps--; // we don't add this token and also subtract 1 = -2
+            } else
+                steps++;
+        }
+    }
+    // printf("%d, Rn=%d, Ar=%d, Y=%d\tsteps=%d\n", N, Rn, Ar, Y,
+    //        steps - 1);
+    cout << steps - 1 << endl; // -1 for the root node `e`
 
-    int min = INT_MAX;
-    for (auto &&i : iterate(&pool, 1, 0, molecule, &replaces))
-        if (i < min)
-            min = i;
+    // // cout << molecule << endl;
+    // // for (auto it = replaces.cbegin(); it != replaces.cend(); ++it)
+    // // {
+    // //     cout << it->first << " = " << it->first.size() << " [";
+    // //     for (auto &&i : it->second)
+    // //         cout << i << ", ";
+    // //     cout << "]" << endl;
+    // // }
 
-    cout << min << endl;
+    // ThreadPool pool(24);
 
-    // std::vector<std::future<int>> results;
+    // int min = INT_MAX;
+    // for (auto &&i : iterate(&pool, 1, 0, molecule, &replaces))
+    //     if (i < min)
+    //         min = i;
 
-    // for (int i = 0; i < 8; ++i) {
-    //     results.emplace_back(pool.enqueue([i] {
-    //         while (true)
-    //             ;
-    //         return0
-    //     }));
-    // }
+    // cout << min << endl;
 
-    // for (auto &&result : results)
-    //     std::cout << result.get() << ' ';
-    // std::cout << std::endl;
+    // // std::vector<std::future<int>> results;
+
+    // // for (int i = 0; i < 8; ++i) {
+    // //     results.emplace_back(pool.enqueue([i] {
+    // //         while (true)
+    // //             ;
+    // //         return0
+    // //     }));
+    // // }
+
+    // // for (auto &&result : results)
+    // //     std::cout << result.get() << ' ';
+    // // std::cout << std::endl;
 
     return 0;
 }
