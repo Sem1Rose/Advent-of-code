@@ -1,8 +1,7 @@
-/2023/obj/
-/2023/bin/
-/2023/*.csproj
-/2023/*.sln
+obj
+bin
+*.csproj
+*.sln
 .vscode
-/2017/target
-/2024/target
+target
 input
