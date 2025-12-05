@@ -1,4 +1,4 @@
-use std::{fs, num, sync::WaitTimeoutResult};
+use std::fs;
 
 pub fn part_one() {
     let input = fs::read_to_string("./src/input").unwrap();

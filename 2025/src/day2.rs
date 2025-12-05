@@ -77,8 +77,8 @@ pub fn part_one() {
     let mut sum_invalid_ids = 0;
     for range in ranges {
         // print!("{}-{}: ", range[0], range[1]);
-        let range_l_num_of_digits = range[0].len(); // XXX
-        let range_h_num_of_digits = range[1].len(); // XXXXXX
+        let range_l_num_of_digits = range[0].len();
+        let range_h_num_of_digits = range[1].len();
 
         let mut num_digits = range_l_num_of_digits;
         if num_digits & 1 == 1 {
@@ -194,8 +194,8 @@ pub fn part_two() {
     for range in ranges {
         // println!("{}-{}:", range[0], range[1]);
         let mut found_invalid_ids = vec![];
-        let range_l_num_of_digits = range[0].len(); // XXX
-        let range_h_num_of_digits = range[1].len(); // XXXXXX
+        let range_l_num_of_digits = range[0].len();
+        let range_h_num_of_digits = range[1].len();
 
         for num_digits in range_l_num_of_digits..=range_h_num_of_digits {
             // println!("  {num_digits}:");
