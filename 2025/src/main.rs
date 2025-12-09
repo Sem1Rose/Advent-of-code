@@ -8,12 +8,13 @@ mod day5;
 mod day6;
 mod day7;
 mod day8;
+mod day9;
 
 fn main() {
     let now = Instant::now();
 
-    day8::part_one();
-    day8::part_two();
+    day9::part_one();
+    day9::part_two();
 
     let elapsed = now.elapsed();
     println!("Elapsed time: {:?}", elapsed);
